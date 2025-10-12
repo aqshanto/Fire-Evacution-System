@@ -67,7 +67,7 @@ void printPath(const vector<int>& parent, int start_node) {
     for (int at = start_node; at != -1; at = parent[at]) {
         path.push_back(at);
     }
-    reverse(path.begin(), path.end());
+    // reverse(path.begin(), path.end());
 
     for (size_t i = 0; i < path.size(); ++i) {
         cout << path[i] << (i == path.size() - 1 ? "" : " -> ");
@@ -132,15 +132,12 @@ int main() {
     original_graph[40].push_back({27, 70}); original_graph[40].push_back({41, 150});
     original_graph[41].push_back({40, 150}); original_graph[41].push_back({31, 135});
 
-
-    // --- Define the doors and exits ---
     vector<int> door_nodes = {32, 33, 34, 35, 36, 37, 38, 39, 40, 41};
     vector<int> exit_nodes = {5, 10, 19, 29};
     
-    // --- Get multiple fire locations from user ---
     vector<int> fire_locations;
     int num_fires;
-    const int FIRE_PENALTY = 100000; // Penalty updated as requested
+    const int FIRE_PENALTY = 100000;
     
     cout << "--- Door-to-Exit Evacuation Plan (Multiple Fires) ---" << endl;
     cout << "How many fire locations are there? ";
@@ -157,7 +154,6 @@ int main() {
     cout << "\nGenerating safest routes..." << endl;
 
     vector<vector<Edge>> temp_graph = original_graph;
-    // Apply penalty for all fire locations
     for (int i = 0; i < num_nodes; ++i) {
         for (auto& edge : temp_graph[i]) {
             if (isFireNode(i, fire_locations) || isFireNode(edge.first, fire_locations)) {
@@ -166,13 +162,11 @@ int main() {
         }
     }
     
-    // Pre-calculate shortest paths from each exit
     map<int, DijkstraResult> exit_calculations;
     for (int exit_node : exit_nodes) {
         exit_calculations[exit_node] = dijkstra(temp_graph, exit_node);
     }
 
-    // Now, for each door, find the best exit
     for (int door_node : door_nodes) {
         int min_dist = INF;
         int nearest_exit = -1;
@@ -186,13 +180,25 @@ int main() {
         }
         
         cout << "\n------------------------------------" << endl;
+        // --- MODIFIED OUTPUT LOGIC ---
         if (nearest_exit != -1) {
-            cout << "Start: Door " << door_node;
-            cout << " -> Nearest Exit: " << nearest_exit;
-            cout << " | Cost: " << min_dist;
+            cout << "Start: Door " << door_node << " -> Nearest Exit: " << nearest_exit;
+
+            // Check if the path is dangerous
+            if (min_dist >= FIRE_PENALTY) {
+                cout << "\n\n   *** WARNING: THIS IS A DANGEROUS PATH OF LAST RESORT ***\n"
+                     << "   *** The route passes through a fire-affected zone.  ***\n";
+                // We subtract the penalty to show the actual travel distance
+                cout << "\n   Actual travel distance: " << min_dist - FIRE_PENALTY 
+                     << " (Total cost with penalty: " << min_dist << ")\n";
+            } else {
+                cout << " | Cost: " << min_dist;
+            }
+            
             cout << " | Path: ";
             printPath(exit_calculations[nearest_exit].parent, door_node);
             cout << endl;
+
         } else {
             cout << "Door " << door_node << " is TRAPPED and cannot reach any exit." << endl;
         }

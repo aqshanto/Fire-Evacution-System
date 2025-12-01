@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fire Evacuation Dashboard</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        background-color: #f4f4f9;
+        padding: 20px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 10px solid gray; /* Default color */
+      }
+      .card.SAFE {
+        border-left-color: #4caf50;
+      } /* Green */
+      .card.DANGEROUS {
+        border-left-color: #ff5722;
+      } /* Orange */
+      .card.TRAPPED {
+        border-left-color: #d32f2f;
+      } /* Red */
+
+      .status {
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+      .path {
+        color: #555;
+        margin-top: 10px;
+        font-family: monospace;
+      }
+      .cost {
+        font-size: 0.9em;
+        color: #888;
+      }
+      .fire-alert {
+        background-color: #ffcccc;
+        color: #cc0000;
+        padding: 15px;
+        text-align: center;
+        border-radius: 5px;
+        display: none; /* Hidden by default */
+        font-weight: bold;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔥 Live Evacuation Plan</h1>
+
+    <div id="fireBanner" class="fire-alert">
+      FIRE DETECTED AT NODES: <span id="fireNodes"></span>
+    </div>
+
+    <div id="dashboard" class="grid-container">
+      <p>Waiting for ESP32 data...</p>
+    </div>
+
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        onValue,
+      } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+      // Your web app's Firebase configuration
+      // (I TOOK THESE FROM YOUR SCREENSHOT)
+      const firebaseConfig = {
+        apiKey: "AIzaSyDw-2XuvXuCQtLWGkUsKcQA2X0hHJsHT70",
+        authDomain: "fireevacsystem.firebaseapp.com",
+        databaseURL: "https://fireevacsystem-default-rtdb.firebaseio.com",
+        projectId: "fireevacsystem",
+        storageBucket: "fireevacsystem.firebasestorage.app",
+        messagingSenderId: "739514913058",
+        appId: "1:739514913058:web:3a649f7b22af49b1ac557b",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      // --- THE LISTENER ---
+      // This function runs automatically whenever data changes in the database
+      const logsRef = ref(db, "evacuation_logs");
+
+      onValue(logsRef, (snapshot) => {
+        const data = snapshot.val();
+        const dashboard = document.getElementById("dashboard");
+        const fireBanner = document.getElementById("fireBanner");
+        const fireNodesText = document.getElementById("fireNodes");
+
+        if (data) {
+          dashboard.innerHTML = ""; // Clear old data
+          let activeFires = "";
+
+          // Loop through every door (door_41, door_42, etc.)
+          Object.keys(data).forEach((key) => {
+            const log = data[key];
+
+            // Update Fire Banner info (just take from the first door found)
+            if (log.fire_nodes && log.fire_nodes.trim() !== "") {
+              activeFires = log.fire_nodes;
+            }
+
+            // Create HTML Card
+            const card = document.createElement("div");
+            card.className = `card ${log.status}`; // Adds class SAFE or DANGEROUS
+            card.innerHTML = `
+                        <h3>Door ${log.door_id} → Exit ${log.exit_id}</h3>
+                        <div class="status">Status: ${log.status}</div>
+                        <div class="path">Path: ${log.path}</div>
+                        <div class="cost">Distance Cost: ${log.cost}</div>
+                    `;
+            dashboard.appendChild(card);
+          });
+
+          // Show/Hide Fire Banner
+          if (activeFires) {
+            fireBanner.style.display = "block";
+            fireNodesText.innerText = activeFires;
+          } else {
+            fireBanner.style.display = "none";
+          }
+        } else {
+          dashboard.innerHTML = "<p>No data received yet.</p>";
+        }
+      });
+    </script>
+  </body>
+</html>

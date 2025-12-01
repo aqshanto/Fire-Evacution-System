@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fire Evacuation Master Control</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Fira+Code&display=swap");
+
+      :root {
+        --bg-dark: #1a1b26;
+        --bg-medium: #24283b;
+        --bg-light: #414868;
+        --fg-light: #c0caf5;
+        --fg-medium: #a9b1d6;
+        --fg-dark: #787c99;
+        --accent-blue: #7aa2f7;
+        --accent-green: #00ff41;
+        --accent-red: #ff3333;
+        --border-color: #2c3043;
+        --shadow-color: rgba(0, 0, 0, 0.5);
+      }
+
+      body {
+        background-color: var(--bg-dark);
+        color: var(--fg-light);
+        font-family: "Inter", sans-serif;
+        margin: 0;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* --- Sidebar --- */
+      .sidebar {
+        width: 320px;
+        background-color: var(--bg-medium);
+        border-right: 1px solid var(--border-color);
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 2px 0 15px var(--shadow-color);
+        z-index: 100;
+      }
+
+      h2 {
+        color: var(--accent-blue);
+        margin-top: 0;
+        margin-bottom: 25px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 22px;
+      }
+
+      .control-group {
+        margin-bottom: 25px;
+      }
+
+      .control-group label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--fg-dark);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        display: block;
+      }
+
+      .status-box {
+        background: var(--bg-dark);
+        border: 1px solid var(--border-color);
+        padding: 15px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      #main-status {
+        font-size: 16px;
+        font-weight: bold;
+        color: var(--accent-green);
+        transition: color 0.3s ease;
+      }
+
+      .log-window {
+        flex-grow: 1;
+        background: var(--bg-dark);
+        border: 1px solid var(--border-color);
+        padding: 15px;
+        font-size: 13px;
+        color: var(--fg-medium);
+        overflow-y: auto;
+        font-family: "Fira Code", monospace;
+        border-radius: 8px;
+        line-height: 1.6;
+        height: 150px;
+      }
+
+      .button-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
+
+      button {
+        background: var(--bg-light);
+        color: var(--fg-light);
+        border: 1px solid var(--border-color);
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 6px;
+        font-weight: 600;
+        font-family: "Inter", sans-serif;
+        transition: all 0.2s ease;
+        font-size: 12px;
+      }
+      button:hover {
+        background: var(--accent-blue);
+        color: var(--bg-dark);
+        border-color: var(--accent-blue);
+      }
+      button.reset-btn {
+        width: 100%;
+        background: var(--accent-red);
+        color: white;
+        border-color: var(--accent-red);
+        font-size: 14px;
+        padding: 12px;
+      }
+      button.reset-btn:hover {
+        background: #ff8e9f;
+        border-color: #ff8e9f;
+      }
+
+      /* --- Map Area --- */
+      .map-area {
+        flex-grow: 1;
+        position: relative;
+        background-color: var(--bg-dark);
+        background-image: radial-gradient(#2c3043 1px, transparent 1px);
+        background-size: 20px 20px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .map-container {
+        position: relative;
+        width: 95%;
+        height: 90%;
+        border: 3px solid var(--border-color);
+        border-radius: 15px;
+        background-color: white;
+
+        /* Hardcoded Map Image */
+        background-image: url("map.jpg");
+        background-size: 100% 100%;
+        background-repeat: no-repeat;
+        background-position: center;
+
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        cursor: crosshair; /* Helps for coordinate finding */
+      }
+
+      .map-container.no-image::before {
+        content: "Image Not Found. Please ensure 'map.jpg' is in the folder.";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #333;
+        font-weight: bold;
+        text-align: center;
+        width: 80%;
+        z-index: 0;
+      }
+
+      /* --- SVG & Nodes --- */
+      svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      /* Visible Lines */
+      line {
+        stroke: rgba(0, 0, 0, 0.25); /* Darker for visibility on white map */
+        stroke-width: 8;
+        stroke-linecap: round;
+        transition: stroke 0.4s ease;
+      }
+
+      .node {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        min-width: 60px;
+        height: 35px;
+        padding: 0 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 11px;
+        border-radius: 6px;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        user-select: none;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(4px);
+      }
+      .node:hover {
+        transform: translate(-50%, -50%) scale(1.1);
+        z-index: 11;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+      }
+
+      .room {
+        background: rgba(122, 162, 247, 0.9);
+        color: white;
+      }
+      .stair {
+        background: rgba(0, 180, 0, 0.9);
+        color: white;
+        border-radius: 50%;
+        width: 25px;
+        height: 30px;
+        min-width: auto;
+        text-align: center;
+      }
+
+      .fire {
+        background: rgba(255, 51, 51, 0.95) !important;
+        border-color: red !important;
+        color: white !important;
+        animation: shake 0.5s infinite;
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.6);
+      }
+
+      /* Waypoints are small dots */
+      .waypoint {
+        width: 8px;
+        height: 8px;
+        background: rgba(255, 255, 0, 0.6);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 5;
+        min-width: auto;
+        padding: 0;
+      }
+
+      /* Active Path Style - Green & Animated */
+      .safe-path {
+        stroke: var(--accent-green) !important;
+        stroke-width: 10;
+        stroke-opacity: 0.8;
+        animation: dash 1s linear infinite;
+        filter: drop-shadow(0 0 5px rgba(0, 200, 0, 0.5));
+      }
+
+      @keyframes dash {
+        to {
+          stroke-dashoffset: -20;
+        }
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) rotate(0);
+        }
+        25% {
+          transform: translate(-52%, -48%) rotate(-2deg);
+        }
+        75% {
+          transform: translate(-48%, -52%) rotate(2deg);
+        }
+      }
+
+      .person-marker {
+        position: absolute;
+        font-size: 35px;
+        z-index: 20;
+        pointer-events: none;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        filter: drop-shadow(0 0 5px black);
+        transform: translate(-50%, -50%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <h2><span style="font-size: 28px">🔥</span>Evac Control</h2>
+
+      <div class="control-group">
+        <label>System Status</label>
+        <div class="status-box">
+          <div id="main-status">SETUP MODE</div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Set User Location</label>
+        <div class="button-group">
+          <button onclick="setPerson(1)">Class 1</button>
+          <button onclick="setPerson(2)">Class 2</button>
+          <button onclick="setPerson(3)">Class 3</button>
+          <button onclick="setPerson(4)">Class 4</button>
+          <button onclick="setPerson(5)">Class 5</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>System Actions</label>
+        <button class="reset-btn" onclick="resetSystem()">
+          RESET FIRE ALARM
+        </button>
+      </div>
+
+      <div
+        class="control-group"
+        style="flex-grow: 1; display: flex; flex-direction: column"
+      >
+        <label>Coordinate Logger</label>
+        <div class="log-window" id="console-log">
+          <div>> Click anywhere on map to get coordinates...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="map-area">
+      <!-- Click listener added for coordinate finding -->
+      <div
+        class="map-container no-image"
+        id="mapContainer"
+        onclick="getCoordinates(event)"
+      >
+        <div id="person" class="person-marker" style="left: 50%; top: 50%">
+          👤
+        </div>
+        <svg id="lines"></svg>
+
+        <!-- === NODES === -->
+
+        <!-- Nodes are positioned based on your latest inputs -->
+
+        <!-- Class 1 -->
+        <div
+          class="node room"
+          style="left: 20.2%; top: 33.3%"
+          onclick="event.stopPropagation(); toggleFire(1)"
+          id="n1"
+        >
+          Class 1
+        </div>
+        <!-- Stair 1 -->
+        <div class="node stair" style="left: 17.9%; top: 54.3%" id="n20">
+          Stair 1
+        </div>
+
+        <!-- Class 2 -->
+        <div
+          class="node room"
+          style="left: 36.7%; top: 63.2%"
+          onclick="event.stopPropagation(); toggleFire(2)"
+          id="n2"
+        >
+          Class 2
+        </div>
+        <!-- Stair 2 -->
+        <div class="node stair" style="left: 28.6%; top: 75.9%" id="n21">
+          Stair 2
+        </div>
+
+        <!-- Class 3 -->
+        <div
+          class="node room"
+          style="left: 50.6%; top: 56.4%"
+          onclick="event.stopPropagation(); toggleFire(3)"
+          id="n3"
+        >
+          Class 3
+        </div>
+        <!-- Stair 3 -->
+        <div class="node stair" style="left: 56%; top: 69.6%" id="n22">
+          Stair 3
+        </div>
+
+        <!-- Class 4 -->
+        <div
+          class="node room"
+          style="left: 69.5%; top: 56.7%"
+          onclick="event.stopPropagation(); toggleFire(4)"
+          id="n4"
+        >
+          Class 4
+        </div>
+        <!-- Class 5 -->
+        <div
+          class="node room"
+          style="left: 88%; top: 55%"
+          onclick="event.stopPropagation(); toggleFire(5)"
+          id="n5"
+        >
+          Class 5
+        </div>
+        <!-- Stair 4 -->
+        <div class="node stair" style="left: 73.6%; top: 41%" id="n23">
+          Stair 4
+        </div>
+
+        <!-- Waypoints (Nodes) -->
+        <div class="node waypoint" style="left: 22.2%; top: 18%" id="101"></div>
+        <div
+          class="node waypoint"
+          style="left: 32.9%; top: 39.9%"
+          id="102"
+        ></div>
+        <div
+          class="node waypoint"
+          style="left: 22.4%; top: 51.2%"
+          id="103"
+        ></div>
+        <div
+          class="node waypoint"
+          style="left: 25.4%; top: 59.4%"
+          id="104"
+        ></div>
+        <div
+          class="node waypoint"
+          style="left: 29.2%; top: 55.3%"
+          id="105"
+        ></div>
+        <div
+          class="node waypoint"
+          style="left: 36.9%; top: 47.4%"
+          id="106"
+        ></div>
+        <div
+          class="node waypoint"
+          style="left: 44.3%; top: 62.8%"
+          id="107"
+        ></div>
+        <div
+          class="node waypoint"
+          style="left: 48.8%; top: 65.8%"
+          id="108"
+        ></div>
+        <div
+          class="node waypoint"
+          style="left: 60.1%; top: 65.6%"
+          id="109"
+        ></div>
+        <div
+          class="node waypoint"
+          style="left: 32.1%; top: 72.3%"
+          id="110"
+        ></div>
+        <!-- Nodes 11-15 -->
+        <div class="node waypoint" style="left: 60%; top: 54.7%" id="111"></div>
+        <div class="node waypoint" style="left: 60.3%; top: 48%" id="112"></div>
+        <div class="node waypoint" style="left: 62.6%; top: 48%" id="113"></div>
+        <div
+          class="node waypoint"
+          style="left: 62.5%; top: 56.9%"
+          id="114"
+        ></div>
+        <div
+          class="node waypoint"
+          style="left: 62.8%; top: 65.9%"
+          id="115"
+        ></div>
+        <!-- New Nodes 16-18 -->
+        <div
+          class="node waypoint"
+          style="left: 75.8%; top: 47.5%"
+          id="116"
+        ></div>
+        <div
+          class="node waypoint"
+          style="left: 66.5%; top: 66.9%"
+          id="117"
+        ></div>
+        <div class="node waypoint" style="left: 85%; top: 66.6%" id="118"></div>
+      </div>
+    </div>
+
+    <script>
+      // Load map.jpg automatically
+      const bgImg = new Image();
+      bgImg.onload = function () {
+        document.getElementById("mapContainer").classList.remove("no-image");
+      };
+      bgImg.onerror = function () {
+        log("Error: 'map.jpg' not found in folder.");
+      };
+      bgImg.src = "map.jpg";
+
+      // === COORDINATE FINDER TOOL ===
+      function getCoordinates(event) {
+        const container = document.getElementById("mapContainer");
+        const rect = container.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+        log(`📍 Clicked at: left: ${x.toFixed(1)}%; top: ${y.toFixed(1)}%;`);
+      }
+
+      // === 1. COORDINATES ===
+      const coords = {
+        1: { x: 20.2, y: 33.3 }, // Class 1
+        20: { x: 17.9, y: 54.3 }, // Stair 1
+
+        2: { x: 36.7, y: 63.2 }, // Class 2
+        21: { x: 28.6, y: 75.9 }, // Stair 2
+
+        3: { x: 50.6, y: 56.4 }, // Class 3
+        22: { x: 56.0, y: 69.6 }, // Stair 3
+
+        4: { x: 69.5, y: 56.7 }, // Class 4
+        5: { x: 88.0, y: 55.0 }, // Class 5
+        23: { x: 73.6, y: 41.0 }, // Stair 4
+
+        // Waypoints (Nodes)
+        101: { x: 22.2, y: 18.0 },
+        102: { x: 32.9, y: 39.9 },
+        103: { x: 22.4, y: 51.2 },
+        104: { x: 25.4, y: 59.4 },
+        105: { x: 29.2, y: 55.3 },
+        106: { x: 36.9, y: 47.4 },
+        107: { x: 44.3, y: 62.8 },
+        108: { x: 48.8, y: 65.8 },
+        109: { x: 60.1, y: 65.6 },
+        110: { x: 32.1, y: 72.3 },
+        // New Nodes
+        111: { x: 60.0, y: 54.7 },
+        112: { x: 60.3, y: 48.0 },
+        113: { x: 62.6, y: 48.0 },
+        114: { x: 62.5, y: 56.9 },
+        115: { x: 62.8, y: 65.9 },
+        116: { x: 75.8, y: 47.5 },
+        117: { x: 66.5, y: 66.9 },
+        118: { x: 85.0, y: 66.6 },
+      };
+
+      // === 2. GRAPH TOPOLOGY (Manual Connection) ===
+      const graph = {
+        // Line sequence: Class 1 -> Node 1 -> Node 2 -> Node 3 -> Stair 1
+        1: { 101: 10 },
+        101: { 1: 10, 102: 10 },
+        102: { 101: 10, 103: 10, 106: 10 },
+        103: { 102: 10, 20: 10, 104: 10 },
+        20: { 103: 10 },
+
+        // Node 3 -> Node 4 -> Node 10 -> Stair 2
+        104: { 103: 10, 110: 10, 105: 10 },
+        110: { 104: 10, 21: 10 },
+
+        // Node 4 -> Node 5 -> Node 6 -> Node 7
+        105: { 104: 10, 106: 10 },
+        106: { 105: 10, 107: 10, 102: 10, 112: 10, 3: 10 }, // node6 to node12, class3
+        107: { 106: 10, 108: 10, 2: 10, 117: 10 },
+        2: { 107: 10 },
+        3: { 106: 10 },
+
+        // Node 7 -> Node 8 -> Stair 3 -> Node 9
+        108: { 107: 10, 22: 10 },
+        22: { 108: 10, 109: 10 },
+        109: { 22: 10, 111: 10 },
+
+        111: { 109: 10, 112: 10 },
+        112: { 111: 10, 113: 10, 106: 10 },
+        113: { 112: 10, 114: 10 },
+        114: { 113: 10, 115: 10 },
+        115: { 114: 10 }, // removed 115-116 connection
+
+        116: { 23: 10, 4: 10, 5: 10 }, // node16 to stair4, class4, class5
+        23: { 116: 10 },
+        4: { 116: 10 },
+
+        117: { 107: 10, 118: 10 }, // Removed stair3, added node18 connection
+        118: { 117: 10, 5: 10 }, // node18 to class5
+        5: { 118: 10, 116: 10 },
+
+        21: { 110: 10 },
+      };
+
+      const exits = [20, 21, 22, 23];
+      let fires = [];
+      let personLoc = 3; // Default to Class 3 to see the paths
+
+      // === SETUP ===
+      const svg = document.getElementById("lines");
+      const container = document.getElementById("mapContainer");
+
+      function drawLines() {
+        svg.innerHTML = "";
+        let w = container.offsetWidth;
+        let h = container.offsetHeight;
+        let drawn = new Set();
+
+        for (let u in graph) {
+          for (let v in graph[u]) {
+            let key = [u, v].sort().join("-");
+            if (!drawn.has(key)) {
+              let line = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "line"
+              );
+              let x1 = (coords[u].x / 100) * w;
+              let y1 = (coords[u].y / 100) * h;
+              let x2 = (coords[v].x / 100) * w;
+              let y2 = (coords[v].y / 100) * h;
+              line.setAttribute("x1", x1);
+              line.setAttribute("y1", y1);
+              line.setAttribute("x2", x2);
+              line.setAttribute("y2", y2);
+              line.setAttribute("id", "path-" + key);
+              svg.appendChild(line);
+              drawn.add(key);
+            }
+          }
+        }
+        updatePersonPosition();
+        calculatePath(); // Ensure path draws on load
+      }
+
+      function updatePersonPosition() {
+        // Adjusted to check for purely numeric IDs first, then fallback to 'n' prefix
+        let el = document.getElementById(personLoc);
+        if (!el) el = document.getElementById("n" + personLoc); // Fallback for old IDs
+
+        let p = document.getElementById("person");
+        if (el) {
+          p.style.left = el.style.left;
+          p.style.top = el.style.top;
+        }
+      }
+
+      // === LOGIC ===
+      function log(msg) {
+        let win = document.getElementById("console-log");
+        const newLog = document.createElement("div");
+        newLog.innerHTML = `> ${msg}`;
+        win.appendChild(newLog);
+        win.scrollTop = win.scrollHeight;
+      }
+
+      function toggleFire(id) {
+        id = parseInt(id);
+        // Adjusted to check for purely numeric IDs first, then fallback to 'n' prefix
+        let el = document.getElementById(id);
+        if (!el) el = document.getElementById("n" + id);
+
+        if (fires.includes(id)) {
+          fires = fires.filter((f) => f !== id);
+          if (el) el.classList.remove("fire");
+          log(`Fire EXTINGUISHED at Node ${id}`);
+        } else {
+          fires.push(id);
+          if (el) el.classList.add("fire");
+          log(`⚠️ FIRE DETECTED at Node ${id}`);
+        }
+        calculatePath();
+      }
+
+      function setPerson(id) {
+        personLoc = id;
+        updatePersonPosition();
+        log(`User moved to Class ${id}`);
+        calculatePath();
+      }
+
+      function resetSystem() {
+        fires = [];
+        document
+          .querySelectorAll(".node")
+          .forEach((n) => n.classList.remove("fire"));
+        log("System RESET.");
+        calculatePath();
+      }
+
+      // === DIJKSTRA ALGORITHM (Restored) ===
+      function calculatePath() {
+        // Reset path styles
+        document.querySelectorAll("line").forEach((l) => {
+          l.setAttribute("class", "");
+          l.style.stroke = "rgba(0, 0, 0, 0.25)"; // Reset to grey
+        });
+        let status = document.getElementById("main-status");
+
+        if (fires.includes(personLoc)) {
+          status.innerText = "CRITICAL: USER IN FIRE ZONE!";
+          status.style.color = "var(--accent-red)";
+          log("!! DANGER: User is inside a fire zone !!");
+          return;
+        }
+
+        let dist = {};
+        let parent = {};
+        for (let n in coords) dist[n] = Infinity; // Init all nodes
+        dist[personLoc] = 0;
+        let queue = [{ id: personLoc, dist: 0 }];
+
+        // Run Dijkstra
+        while (queue.length) {
+          queue.sort((a, b) => a.dist - b.dist);
+          let u = queue.shift().id;
+
+          if (exits.includes(parseInt(u))) continue;
+
+          if (graph[u]) {
+            for (let v in graph[u]) {
+              v = parseInt(v);
+              let w = graph[u][v];
+              if (fires.includes(v)) w += 9999;
+
+              if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                parent[v] = u;
+                queue.push({ id: v, dist: dist[v] });
+              }
+            }
+          }
+        }
+
+        let bestExit = -1;
+        let minDist = Infinity;
+        exits.forEach((e) => {
+          if (dist[e] < minDist && dist[e] < 5000) {
+            minDist = dist[e];
+            bestExit = e;
+          }
+        });
+
+        if (bestExit !== -1) {
+          // Attempt to find element by numeric ID first, then fallback to 'n' prefix
+          let exitEl =
+            document.getElementById(bestExit) ||
+            document.getElementById("n" + bestExit);
+          let exitName = exitEl?.innerText || "Exit";
+
+          status.innerText = `ESCAPE ROUTE: GO TO ${exitName}`;
+          status.style.color = "var(--accent-green)";
+
+          let curr = bestExit;
+          let pathStr = [exitName];
+          while (curr != personLoc && parent[curr]) {
+            let prev = parent[curr];
+            let key = [prev, curr].sort().join("-");
+            let line = document.getElementById("path-" + key);
+            if (line) {
+              line.classList.add("safe-path");
+            }
+            curr = prev;
+            // Similar logic for finding element
+            let currEl =
+              document.getElementById(curr) ||
+              document.getElementById("n" + curr);
+            pathStr.push(currEl?.innerText || `Junction`);
+          }
+          log(`Path: ${pathStr.reverse().join(" → ")}`);
+        } else {
+          status.innerText = "NO SAFE PATH AVAILABLE";
+          status.style.color = "var(--accent-red)";
+          log("CRITICAL: All paths blocked by fire or not connected.");
+        }
+      }
+
+      window.addEventListener("resize", drawLines);
+
+      // Init
+      setTimeout(drawLines, 100);
+    </script>
+  </body>
+</html>

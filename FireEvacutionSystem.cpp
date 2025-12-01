@@ -62,12 +62,18 @@ DijkstraResult dijkstra(const vector<vector<Edge>>& graph, int src) {
 }
 
 // Function to print the path from a start node to an end node
-void printPath(const vector<int>& parent, int start_node) {
+void printPath(const vector<int>& parent, int end_node) {
     vector<int> path;
-    for (int at = start_node; at != -1; at = parent[at]) {
+    // Backtrack from the end_node to the start
+    for (int at = end_node; at != -1; at = parent[at]) {
         path.push_back(at);
     }
-    // reverse(path.begin(), path.end());
+    reverse(path.begin(), path.end());
+
+    if (path.size() <= 1 && parent[end_node] == -1) {
+         // Should not happen if a valid path exists, but safety check
+         return; 
+    }
 
     for (size_t i = 0; i < path.size(); ++i) {
         cout << path[i] << (i == path.size() - 1 ? "" : " -> ");
@@ -84,56 +90,79 @@ bool isFireNode(int node, const vector<int>& fire_locations) {
     return false;
 }
 
-
 int main() {
-    int num_nodes = 42; // Nodes 1-41, so size 42
+    // Highest node ID is 119, so we need size 120 (0 to 119)
+    int num_nodes = 120; 
     vector<vector<Edge>> original_graph(num_nodes);
     
-    // --- Populating the graph with your 41 nodes and edges ---
-    original_graph[1].push_back({2, 125}); original_graph[1].push_back({33, 112});
-    original_graph[2].push_back({1, 125}); original_graph[2].push_back({3, 125});
-    original_graph[3].push_back({2, 125}); original_graph[3].push_back({4, 142}); original_graph[3].push_back({8, 114});
-    original_graph[4].push_back({3, 142}); original_graph[4].push_back({5, 112}); original_graph[4].push_back({7, 114});
-    original_graph[5].push_back({4, 112}); original_graph[5].push_back({6, 114}); original_graph[5].push_back({32, 150});
-    original_graph[6].push_back({5, 114}); original_graph[6].push_back({7, 112}); original_graph[6].push_back({9, 135});
-    original_graph[7].push_back({6, 112}); original_graph[7].push_back({4, 114}); original_graph[7].push_back({8, 142}); original_graph[7].push_back({34, 100});
-    original_graph[8].push_back({3, 114}); original_graph[8].push_back({7, 142}); original_graph[8].push_back({11, 135}); original_graph[8].push_back({15, 100});
-    original_graph[9].push_back({6, 135}); original_graph[9].push_back({10, 64});
-    original_graph[10].push_back({9, 64});
-    original_graph[11].push_back({8, 135}); original_graph[11].push_back({12, 100});
-    original_graph[12].push_back({11, 100}); original_graph[12].push_back({13, 35}); original_graph[12].push_back({35, 100});
-    original_graph[13].push_back({12, 35}); original_graph[13].push_back({14, 30});
-    original_graph[14].push_back({13, 30}); original_graph[14].push_back({18, 143});
-    original_graph[15].push_back({8, 100}); original_graph[15].push_back({16, 141}); original_graph[15].push_back({36, 220});
-    original_graph[16].push_back({15, 141}); original_graph[16].push_back({17, 128});
-    original_graph[17].push_back({16, 128}); original_graph[17].push_back({24, 23}); original_graph[17].push_back({21, 101});
-    original_graph[18].push_back({14, 143}); original_graph[18].push_back({19, 10}); original_graph[18].push_back({20, 12});
-    original_graph[19].push_back({18, 10});
-    original_graph[20].push_back({18, 12}); original_graph[20].push_back({21, 99}); original_graph[20].push_back({22, 23});
-    original_graph[21].push_back({17, 101}); original_graph[21].push_back({37, 60}); original_graph[21].push_back({20, 99});
-    original_graph[22].push_back({20, 23}); original_graph[22].push_back({23, 99}); original_graph[22].push_back({25, 40});
-    original_graph[23].push_back({22, 99}); original_graph[23].push_back({38, 75}); original_graph[23].push_back({24, 101});
-    original_graph[24].push_back({17, 23}); original_graph[24].push_back({23, 101}); original_graph[24].push_back({28, 196});
-    original_graph[25].push_back({22, 40}); original_graph[25].push_back({26, 272});
-    original_graph[26].push_back({25, 272}); original_graph[26].push_back({27, 55});
-    original_graph[27].push_back({26, 55}); original_graph[27].push_back({40, 70});
-    original_graph[28].push_back({24, 196}); original_graph[28].push_back({29, 28}); original_graph[28].push_back({30, 103}); original_graph[28].push_back({39, 230});
-    original_graph[29].push_back({28, 28});
-    original_graph[30].push_back({28, 103}); original_graph[30].push_back({31, 45});
-    original_graph[31].push_back({30, 45}); original_graph[31].push_back({41, 135});
-    original_graph[32].push_back({33, 150}); original_graph[32].push_back({5, 150});
-    original_graph[33].push_back({32, 150}); original_graph[33].push_back({1, 112});
-    original_graph[34].push_back({7, 100}); original_graph[34].push_back({35, 175});
-    original_graph[35].push_back({34, 175}); original_graph[35].push_back({12, 100});
-    original_graph[36].push_back({15, 220}); original_graph[36].push_back({37, 250});
-    original_graph[37].push_back({36, 250}); original_graph[37].push_back({21, 60});
-    original_graph[38].push_back({23, 75}); original_graph[38].push_back({39, 250});
-    original_graph[39].push_back({38, 250}); original_graph[39].push_back({28, 230});
-    original_graph[40].push_back({27, 70}); original_graph[40].push_back({41, 150});
-    original_graph[41].push_back({40, 150}); original_graph[41].push_back({31, 135});
+    // --- Populating the graph with your NEW data ---
+    original_graph[41].push_back({42, 150}); original_graph[41].push_back({101, 112});
+    
+    original_graph[42].push_back({41, 150}); original_graph[42].push_back({103, 120});
+    
+    original_graph[43].push_back({44, 125}); original_graph[43].push_back({105, 100});
+    
+    original_graph[44].push_back({43, 125}); original_graph[44].push_back({107, 100});
+    
+    original_graph[45].push_back({46, 250}); original_graph[45].push_back({106, 220});
+    
+    original_graph[46].push_back({45, 250}); original_graph[46].push_back({112, 50});
+    
+    original_graph[47].push_back({48, 250}); original_graph[47].push_back({115, 75}); original_graph[47].push_back({118, 70});
+    
+    original_graph[48].push_back({47, 250}); original_graph[48].push_back({117, 150});
+    
+    original_graph[49].push_back({50, 150}); original_graph[49].push_back({117, 200});
+    
+    original_graph[50].push_back({49, 150}); original_graph[50].push_back({119, 70});
+    
+    original_graph[101].push_back({41, 112}); original_graph[101].push_back({102, 250});
+    
+    original_graph[102].push_back({101, 250}); original_graph[102].push_back({103, 245}); original_graph[102].push_back({106, 114});
+    
+    original_graph[103].push_back({42, 120}); 
+    original_graph[103].push_back({51, 20}); // One-way to 51 (Stair/Exit)
+    original_graph[103].push_back({102, 245}); original_graph[103].push_back({104, 114});
+    
+    original_graph[104].push_back({103, 114}); original_graph[104].push_back({105, 100}); original_graph[104].push_back({111, 200});
+    
+    original_graph[105].push_back({43, 100}); original_graph[105].push_back({104, 100}); original_graph[105].push_back({106, 145});
+    
+    original_graph[106].push_back({45, 220}); original_graph[106].push_back({102, 114}); original_graph[106].push_back({105, 145}); original_graph[106].push_back({107, 235}); original_graph[106].push_back({113, 370});
+    
+    original_graph[107].push_back({44, 100}); original_graph[107].push_back({106, 235}); original_graph[107].push_back({108, 35});
+    
+    original_graph[108].push_back({107, 35}); original_graph[108].push_back({109, 175});
+    
+    original_graph[109].push_back({53, 10}); // One-way to 53 (Stair/Exit)
+    original_graph[109].push_back({108, 175}); original_graph[109].push_back({110, 20});
+    
+    original_graph[110].push_back({109, 20}); original_graph[110].push_back({112, 100}); original_graph[110].push_back({116, 65});
+    
+    original_graph[111].push_back({52, 20}); // One-way to 52 (Stair/Exit)
+    original_graph[111].push_back({104, 200});
+    
+    original_graph[112].push_back({46, 50}); original_graph[112].push_back({110, 100}); original_graph[112].push_back({113, 100});
+    
+    original_graph[113].push_back({106, 370}); original_graph[113].push_back({112, 100}); original_graph[113].push_back({114, 65});
+    
+    original_graph[114].push_back({113, 65}); original_graph[114].push_back({115, 130}); original_graph[114].push_back({117, 200});
+    
+    original_graph[115].push_back({47, 75}); original_graph[115].push_back({114, 130}); original_graph[115].push_back({116, 70});
+    
+    original_graph[116].push_back({110, 65}); original_graph[116].push_back({115, 70}); original_graph[116].push_back({118, 40});
+    
+    original_graph[117].push_back({48, 150}); original_graph[117].push_back({49, 200}); 
+    original_graph[117].push_back({54, 30}); // One-way to 54 (Stair/Exit)
+    original_graph[117].push_back({114, 200});
+    
+    original_graph[118].push_back({47, 70}); original_graph[118].push_back({116, 40}); original_graph[118].push_back({119, 327});
+    
+    original_graph[119].push_back({50, 70}); original_graph[119].push_back({118, 327});
 
-    vector<int> door_nodes = {32, 33, 34, 35, 36, 37, 38, 39, 40, 41};
-    vector<int> exit_nodes = {5, 10, 19, 29};
+    // --- Define the doors and exits based on your request ---
+    vector<int> door_nodes = {41, 42, 43, 44, 45, 46, 47, 48, 49, 50};
+    vector<int> exit_nodes = {51, 52, 53, 54};
     
     vector<int> fire_locations;
     int num_fires;
@@ -144,7 +173,7 @@ int main() {
     cin >> num_fires;
     for (int i = 0; i < num_fires; ++i) {
         int fire_node;
-        cout << "Enter fire location #" << i + 1 << " (1-41): ";
+        cout << "Enter fire location #" << i + 1 << ": ";
         cin >> fire_node;
         fire_locations.push_back(fire_node);
     }
@@ -153,6 +182,7 @@ int main() {
     for(int loc : fire_locations) cout << loc << " ";
     cout << "\nGenerating safest routes..." << endl;
 
+    // Apply penalty for all fire locations
     vector<vector<Edge>> temp_graph = original_graph;
     for (int i = 0; i < num_nodes; ++i) {
         for (auto& edge : temp_graph[i]) {
@@ -162,17 +192,18 @@ int main() {
         }
     }
     
-    map<int, DijkstraResult> exit_calculations;
-    for (int exit_node : exit_nodes) {
-        exit_calculations[exit_node] = dijkstra(temp_graph, exit_node);
-    }
-
+    // --- Loop through each DOOR and find the nearest EXIT ---
+    // (We calculate from Door -> Exit because some paths to exits are one-way)
     for (int door_node : door_nodes) {
+        // Run Dijkstra starting from this specific door
+        DijkstraResult result = dijkstra(temp_graph, door_node);
+        
         int min_dist = INF;
         int nearest_exit = -1;
         
+        // Check distance to all possible exits
         for (int exit_node : exit_nodes) {
-            int current_dist = exit_calculations[exit_node].dist[door_node];
+            int current_dist = result.dist[exit_node];
             if (current_dist < min_dist) {
                 min_dist = current_dist;
                 nearest_exit = exit_node;
@@ -180,15 +211,14 @@ int main() {
         }
         
         cout << "\n------------------------------------" << endl;
-        // --- MODIFIED OUTPUT LOGIC ---
+        
         if (nearest_exit != -1) {
             cout << "Start: Door " << door_node << " -> Nearest Exit: " << nearest_exit;
 
             // Check if the path is dangerous
             if (min_dist >= FIRE_PENALTY) {
                 cout << "\n\n   *** WARNING: THIS IS A DANGEROUS PATH OF LAST RESORT ***\n"
-                     << "   *** The route passes through a fire-affected zone.  ***\n";
-                // We subtract the penalty to show the actual travel distance
+                     << "   *** The route passes through a fire-affected zone. ***\n";
                 cout << "\n   Actual travel distance: " << min_dist - FIRE_PENALTY 
                      << " (Total cost with penalty: " << min_dist << ")\n";
             } else {
@@ -196,7 +226,8 @@ int main() {
             }
             
             cout << " | Path: ";
-            printPath(exit_calculations[nearest_exit].parent, door_node);
+            // Use the parent array from the Dijkstra run to print path
+            printPath(result.parent, nearest_exit);
             cout << endl;
 
         } else {

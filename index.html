@@ -476,6 +476,87 @@
           filter: drop-shadow(0 0 8px red);
         }
       }
+
+      /* --- MOBILE RESPONSIVE DESIGN --- */
+      @media screen and (max-width: 768px) {
+        body {
+          flex-direction: column; /* পাশাপাশি থেকে উপর-নিচ করা */
+          overflow: hidden; /* বডি স্ক্রল বন্ধ, আলাদা আলাদা সেকশন স্ক্রল হবে */
+        }
+
+        /* 1. MAP AREA (UPPER PART) */
+        .map-area {
+          flex: 1; /* স্ক্রিনের বাকি জায়গা নিবে */
+          width: 100%;
+          order: 1; /* ম্যাপ সবার উপরে থাকবে */
+          overflow: auto; /* ম্যাপ প্যান/স্ক্রল করা যাবে */
+          padding: 0;
+          background-color: #0b1120;
+          /* টাচ স্ক্রিনে স্মুথ স্ক্রলিং */
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .map-container {
+          /* ম্যাপ ছোট না করে আসল সাইজে রাখা, যাতে পজিশন নষ্ট না হয় */
+          transform: scale(0.7); /* মোবাইল স্ক্রিনে ডিফল্ট একটু জুম আউট */
+          transform-origin: top left; /* বাম কোণা থেকে শুরু হবে */
+          margin: 0;
+          /* স্কেল করার পর স্পেস ঠিক রাখার জন্য */
+          margin-bottom: -30%;
+          margin-right: -30%;
+        }
+
+        /* 2. SIDEBAR (BOTTOM PART) */
+        .sidebar {
+          width: 100%;
+          height: 40vh; /* স্ক্রিনের নিচের ৪০% জায়গা নিবে */
+          order: 2; /* ম্যাপের নিচে থাকবে */
+          border-right: none;
+          border-top: 1px solid var(--border-color);
+          padding: 15px;
+          border-radius: 20px 20px 0 0; /* উপরের কোণাগুলো গোল */
+          box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Header Compact */
+        .header {
+          margin-bottom: 15px;
+          padding-bottom: 10px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .header h2 {
+          font-size: 18px;
+        }
+        .subtitle {
+          display: none; /* মোবাইলে সাবটাইটেল হাইড */
+        }
+
+        /* Status Grid Compact */
+        .status-grid {
+          margin-bottom: 15px;
+          gap: 10px;
+        }
+        .status-card {
+          padding: 10px;
+        }
+        .status-val {
+          font-size: 14px;
+        }
+
+        /* Room List Scrollable */
+        #roomContainer {
+          overflow-y: auto;
+          max-height: 100px; /* রুম লিস্টের জন্য নির্দিষ্ট উচ্চতা */
+          padding-right: 5px;
+        }
+
+        .footer {
+          padding-top: 10px;
+          font-size: 10px;
+        }
+      }
     </style>
   </head>
   <body>

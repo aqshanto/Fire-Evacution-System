@@ -15,7 +15,6 @@
       @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
 
       :root {
-        /* --- COLOR PALETTE (Matches your Screenshot) --- */
         --sidebar-bg: #0f172a;
         --sidebar-card: #1e293b;
         --text-sidebar-main: #f8fafc;
@@ -48,7 +47,6 @@
         overflow: hidden;
       }
 
-      /* --- SIDEBAR --- */
       .sidebar {
         width: 380px;
         background-color: var(--sidebar-bg);
@@ -97,7 +95,6 @@
         font-weight: 500;
       }
 
-      /* --- NEW CONNECTION BADGE (TOP) --- */
       .connection-badge {
         display: inline-flex;
         align-items: center;
@@ -120,24 +117,24 @@
         background: #475569;
       }
 
-      /* Online State Styles */
       .dot.online {
         background: var(--safe);
         box-shadow: 0 0 8px var(--safe);
       }
+
       .connection-badge.active {
         border-color: rgba(16, 185, 129, 0.3);
         background: rgba(16, 185, 129, 0.1);
         color: var(--safe);
       }
 
-      /* STATUS GRID */
       .status-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 15px;
         margin-bottom: 30px;
       }
+
       .status-card {
         background: var(--sidebar-card);
         border-radius: 12px;
@@ -145,6 +142,7 @@
         text-align: center;
         border: 1px solid #334155;
       }
+
       .status-label {
         font-size: 11px;
         font-weight: 700;
@@ -153,13 +151,16 @@
         display: block;
         margin-bottom: 8px;
       }
+
       .status-val {
         font-size: 18px;
         font-weight: 800;
       }
+
       .status-val.safe {
         color: var(--safe);
       }
+
       .status-val.danger {
         color: var(--danger);
       }
@@ -176,7 +177,6 @@
         align-items: center;
       }
 
-      /* ROOM ITEMS */
       .room-item {
         background: var(--sidebar-card);
         border: 1px solid #334155;
@@ -189,6 +189,7 @@
         transition: all 0.2s ease;
         cursor: pointer;
       }
+
       .room-item:hover {
         transform: translateX(5px);
         background: #334155;
@@ -203,6 +204,7 @@
         align-items: center;
         gap: 10px;
       }
+
       .room-icon {
         color: var(--text-sidebar-sub);
         font-size: 14px;
@@ -217,11 +219,11 @@
         color: var(--text-sidebar-sub);
       }
 
-      /* STATES */
       .room-item.selected {
         background: rgba(16, 185, 129, 0.15) !important;
         border: 1px solid var(--safe) !important;
       }
+
       .room-item.selected .room-name {
         color: var(--safe);
       }
@@ -230,9 +232,11 @@
         background: rgba(239, 68, 68, 0.15) !important;
         border: 1px solid var(--danger) !important;
       }
+
       .room-item.danger .room-name {
         color: var(--danger);
       }
+
       .room-item.danger .room-status {
         background: rgba(239, 68, 68, 0.2);
         color: var(--danger);
@@ -243,7 +247,6 @@
         background: rgba(16, 185, 129, 0.1);
       }
 
-      /* --- MAP AREA --- */
       .map-area {
         flex-grow: 1;
         position: relative;
@@ -300,7 +303,6 @@
         }
       }
 
-      /* NODES */
       .node {
         position: absolute;
         transform: translate(-50%, -50%);
@@ -384,7 +386,7 @@
         }
       }
 
-      /* MOBILE */
+      /* mobile */
       @media screen and (max-width: 768px) {
         body {
           flex-direction: column;
@@ -631,7 +633,6 @@
     </div>
 
     <script>
-      // 1. FIREBASE CONFIG
       const firebaseConfig = {
         apiKey: "AIzaSyDw-2XuvXuCQtLWGkUsKcQA2X0hHJsHT70",
         databaseURL: "https://fireevacsystem-default-rtdb.firebaseio.com",
@@ -643,7 +644,6 @@
       let currentData = null;
       let selectedDoorId = null;
 
-      // 2. GRAPH DATA
       const graphConnections = [
         [41, 42],
         [41, 101],
@@ -810,10 +810,9 @@
             const statusSpan = roomCard.querySelector(".room-status");
             statusSpan.innerText = log.status;
 
-            // STATUS COLOR LOGIC
             roomCard.classList.remove("danger");
             statusSpan.classList.remove("safe");
-            statusSpan.style.color = ""; // reset inline
+            statusSpan.style.color = "";
 
             if (log.status === "DANGEROUS" || log.status === "TRAPPED") {
               roomCard.classList.add("danger");
@@ -878,7 +877,6 @@
 
       setTimeout(drawStaticGraph, 100);
 
-      // --- CALIBRATION TOOL ---
       container.addEventListener("click", function (e) {
         const rect = container.getBoundingClientRect();
         const x = e.clientX - rect.left;

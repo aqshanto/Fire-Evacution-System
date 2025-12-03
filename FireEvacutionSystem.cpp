@@ -61,17 +61,14 @@ DijkstraResult dijkstra(const vector<vector<Edge>>& graph, int src) {
     return result;
 }
 
-// Function to print the path from a start node to an end node
 void printPath(const vector<int>& parent, int end_node) {
     vector<int> path;
-    // Backtrack from the end_node to the start
     for (int at = end_node; at != -1; at = parent[at]) {
         path.push_back(at);
     }
     reverse(path.begin(), path.end());
 
     if (path.size() <= 1 && parent[end_node] == -1) {
-         // Should not happen if a valid path exists, but safety check
          return; 
     }
 
@@ -80,7 +77,6 @@ void printPath(const vector<int>& parent, int end_node) {
     }
 }
 
-// Helper function to check if a node is in the fire list
 bool isFireNode(int node, const vector<int>& fire_locations) {
     for (int fire_node : fire_locations) {
         if (node == fire_node) {
@@ -91,11 +87,8 @@ bool isFireNode(int node, const vector<int>& fire_locations) {
 }
 
 int main() {
-    // Highest node ID is 119, so we need size 120 (0 to 119)
     int num_nodes = 120; 
     vector<vector<Edge>> original_graph(num_nodes);
-    
-    // --- Populating the graph with your NEW data ---
     original_graph[41].push_back({42, 150}); original_graph[41].push_back({101, 112});
     
     original_graph[42].push_back({41, 150}); original_graph[42].push_back({103, 120});
@@ -121,7 +114,7 @@ int main() {
     original_graph[102].push_back({101, 250}); original_graph[102].push_back({103, 245}); original_graph[102].push_back({106, 114});
     
     original_graph[103].push_back({42, 120}); 
-    original_graph[103].push_back({51, 20}); // One-way to 51 (Stair/Exit)
+    original_graph[103].push_back({51, 20});
     original_graph[103].push_back({102, 245}); original_graph[103].push_back({104, 114});
     
     original_graph[104].push_back({103, 114}); original_graph[104].push_back({105, 100}); original_graph[104].push_back({111, 200});
@@ -134,12 +127,12 @@ int main() {
     
     original_graph[108].push_back({107, 35}); original_graph[108].push_back({109, 175});
     
-    original_graph[109].push_back({53, 10}); // One-way to 53 (Stair/Exit)
+    original_graph[109].push_back({53, 10});
     original_graph[109].push_back({108, 175}); original_graph[109].push_back({110, 20});
     
     original_graph[110].push_back({109, 20}); original_graph[110].push_back({112, 100}); original_graph[110].push_back({116, 65});
     
-    original_graph[111].push_back({52, 20}); // One-way to 52 (Stair/Exit)
+    original_graph[111].push_back({52, 20});
     original_graph[111].push_back({104, 200});
     
     original_graph[112].push_back({46, 50}); original_graph[112].push_back({110, 100}); original_graph[112].push_back({113, 100});
@@ -153,14 +146,13 @@ int main() {
     original_graph[116].push_back({110, 65}); original_graph[116].push_back({115, 70}); original_graph[116].push_back({118, 40});
     
     original_graph[117].push_back({48, 150}); original_graph[117].push_back({49, 200}); 
-    original_graph[117].push_back({54, 30}); // One-way to 54 (Stair/Exit)
+    original_graph[117].push_back({54, 30});
     original_graph[117].push_back({114, 200});
     
     original_graph[118].push_back({47, 70}); original_graph[118].push_back({116, 40}); original_graph[118].push_back({119, 327});
     
     original_graph[119].push_back({50, 70}); original_graph[119].push_back({118, 327});
 
-    // --- Define the doors and exits based on your request ---
     vector<int> door_nodes = {41, 42, 43, 44, 45, 46, 47, 48, 49, 50};
     vector<int> exit_nodes = {51, 52, 53, 54};
     
@@ -182,7 +174,6 @@ int main() {
     for(int loc : fire_locations) cout << loc << " ";
     cout << "\nGenerating safest routes..." << endl;
 
-    // Apply penalty for all fire locations
     vector<vector<Edge>> temp_graph = original_graph;
     for (int i = 0; i < num_nodes; ++i) {
         for (auto& edge : temp_graph[i]) {
@@ -192,16 +183,12 @@ int main() {
         }
     }
     
-    // --- Loop through each DOOR and find the nearest EXIT ---
-    // (We calculate from Door -> Exit because some paths to exits are one-way)
     for (int door_node : door_nodes) {
-        // Run Dijkstra starting from this specific door
         DijkstraResult result = dijkstra(temp_graph, door_node);
         
         int min_dist = INF;
         int nearest_exit = -1;
         
-        // Check distance to all possible exits
         for (int exit_node : exit_nodes) {
             int current_dist = result.dist[exit_node];
             if (current_dist < min_dist) {
@@ -215,7 +202,6 @@ int main() {
         if (nearest_exit != -1) {
             cout << "Start: Door " << door_node << " -> Nearest Exit: " << nearest_exit;
 
-            // Check if the path is dangerous
             if (min_dist >= FIRE_PENALTY) {
                 cout << "\n\n   *** WARNING: THIS IS A DANGEROUS PATH OF LAST RESORT ***\n"
                      << "   *** The route passes through a fire-affected zone. ***\n";
@@ -226,7 +212,6 @@ int main() {
             }
             
             cout << " | Path: ";
-            // Use the parent array from the Dijkstra run to print path
             printPath(result.parent, nearest_exit);
             cout << endl;
 

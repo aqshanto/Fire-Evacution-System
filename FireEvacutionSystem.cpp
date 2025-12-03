@@ -5,24 +5,18 @@
 #include <algorithm>
 #include <map>
 
-// Use the standard namespace to avoid prefixing with std::
 using namespace std;
 
-// A pair to store {neighbor_node, edge_weight}
 using Edge = pair<int, int>;
-// A pair to store {distance, node_id} for the priority queue
 using PqElement = pair<int, int>;
 
-// Define a constant for infinity
 const int INF = numeric_limits<int>::max();
 
-// Struct to hold the results from a single Dijkstra run
 struct DijkstraResult {
     vector<int> dist;
     vector<int> parent;
 };
 
-// Dijkstra's algorithm function
 DijkstraResult dijkstra(const vector<vector<Edge>>& graph, int src) {
     int num_nodes = graph.size();
     DijkstraResult result;
